@@ -60,7 +60,7 @@ parmsort(Xs, Depth) ->
 %% My shuffle is far too inefficient - this is borrowed from stack overflow:
 %% https://stackoverflow.com/a/8820501
 shuffle(Xs) ->
-    [X || {_,X} <- sort([ {random:uniform(), X} || X <- Xs])].
+    [X || {_,X} <- sort([ {rand:uniform(), X} || X <- Xs])].
 
 %% Property for testing that shuffle does not lose elements
 prop_shuffle() -> ?FORALL(Xs, list(nat()), sort(Xs) == sort(shuffle(Xs))).
