@@ -1,6 +1,6 @@
 -module(mergesort).
 -include_lib("eqc/include/eqc.hrl").
--import(lists, [sort/1, split/2]).
+-import(lists, [sort/1, split/2, seq/2]).
 -compile(export_all).
 
 -define(DEPTH, 4).
@@ -35,6 +35,8 @@ parmsort(Xs) ->
 
 %% Sorts the list using the mergesort algorithm,
 %% forking until a certain depth of recursion
+parmsort_depth(Xs) -> parmsort(Xs, ?DEPTH).
+
 parmsort([], _) -> [];
 parmsort([X], _) -> [X];
 parmsort(Xs, 0) -> msort(Xs);
@@ -45,6 +47,30 @@ parmsort(Xs, Depth) ->
     spawn_link(fun() -> RPid ! {Ref, parmsort(Zs, Depth-1)} end),
     Ys_ = parmsort(Ys, Depth-1),
     receive {Ref, Zs_} -> merge(Ys_, Zs_) end.
+
+%% ---------------------------- BENCHMARKING ----------------------------------
+
+%% Shuffles a list
+shuffle([]) -> [];
+shuffle(Xs) ->
+    N = rand:uniform(length(Xs)) - 1,
+    {First, [X|Last]} = split(N, Xs),
+    [X | shuffle(First ++ Last)].
+
+%% Property for testing that shuffle does not lose elements
+prop_shuffle() -> ?FORALL(Xs, list(nat()), sort(Xs) == sort(shuffle(Xs))).
+
+benchmark() -> benchmark([msort, parmsort_depth], 100000).
+
+benchmark(Funs, Size) ->
+    List = shuffle(seq(1, Size)),
+    [single(Fun, List) || Fun <- Funs].
+
+single(Fun, List) ->
+    {Time, _} = timer:tc(?MODULE, Fun, [List]),
+    Time.
+    
+%% ---------------------------- TESTING ---------------------------------------
 
 %% Property for testing merge
 prop_merge() -> ?FORALL(Xs, list(nat()),
