@@ -3,6 +3,8 @@
 -import(lists, [sort/1, split/2]).
 -compile(export_all).
 
+-define(DEPTH, 4).
+
 %% Sorts the list using the mergesort algorithm
 msort([]) -> [];
 msort([X]) -> [X];
@@ -31,6 +33,19 @@ parmsort(Xs) ->
     Ys_ = parmsort(Ys),
     receive {Ref, Zs_} -> merge(Ys_, Zs_) end.
 
+%% Sorts the list using the mergesort algorithm,
+%% forking until a certain depth of recursion
+parmsort([], _) -> [];
+parmsort([X], _) -> [X];
+parmsort(Xs, 0) -> msort(Xs);
+parmsort(Xs, Depth) ->
+    {Ys, Zs} = in_half(Xs),
+    RPid = self(),
+    Ref = make_ref(),
+    spawn_link(fun() -> RPid ! {Ref, parmsort(Zs, Depth-1)} end),
+    Ys_ = parmsort(Ys, Depth-1),
+    receive {Ref, Zs_} -> merge(Ys_, Zs_) end.
+
 %% Property for testing merge
 prop_merge() -> ?FORALL(Xs, list(nat()),
                     ?FORALL(Ys, list(nat()),
@@ -39,5 +54,6 @@ prop_merge() -> ?FORALL(Xs, list(nat()),
 %% Property for testing msort
 prop_msort() -> ?FORALL(Xs, list(nat()), sort(Xs) == msort(Xs)).
 
-%% Property for testing parmsort
+%% Properties for testing parmsort
 prop_parmsort() -> ?FORALL(Xs, list(nat()), sort(Xs) == parmsort(Xs)).
+prop_parmsort_depth() -> ?FORALL(Xs, list(nat()), sort(Xs) == parmsort(Xs, ?DEPTH)).
