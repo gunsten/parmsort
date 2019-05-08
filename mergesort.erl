@@ -51,16 +51,21 @@ parmsort(Xs, Depth) ->
 %% ---------------------------- BENCHMARKING ----------------------------------
 
 %% Shuffles a list
-shuffle([]) -> [];
+%shuffle([]) -> [];
+%shuffle(Xs) ->
+%    N = rand:uniform(length(Xs)) - 1,
+%    {First, [X|Last]} = split(N, Xs),
+%    [X | shuffle(First ++ Last)].
+
+%% My shuffle is far too inefficient - this is borrowed from stack overflow:
+%% https://stackoverflow.com/a/8820501
 shuffle(Xs) ->
-    N = rand:uniform(length(Xs)) - 1,
-    {First, [X|Last]} = split(N, Xs),
-    [X | shuffle(First ++ Last)].
+    [X || {_,X} <- sort([ {random:uniform(), X} || X <- Xs])].
 
 %% Property for testing that shuffle does not lose elements
 prop_shuffle() -> ?FORALL(Xs, list(nat()), sort(Xs) == sort(shuffle(Xs))).
 
-benchmark() -> benchmark([msort, parmsort_depth], 100000).
+benchmark() -> benchmark([msort, parmsort, parmsort_depth], 100000).
 
 benchmark(Funs, Size) ->
     List = shuffle(seq(1, Size)),
@@ -68,7 +73,7 @@ benchmark(Funs, Size) ->
 
 single(Fun, List) ->
     {Time, _} = timer:tc(?MODULE, Fun, [List]),
-    Time.
+    {Fun, Time}.
     
 %% ---------------------------- TESTING ---------------------------------------
 
