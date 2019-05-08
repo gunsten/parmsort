@@ -10,6 +10,7 @@ merge(Xs, []) -> Xs;
 merge([X|Xs], [Y|Ys]) when X =< Y -> [X | merge(Xs, [Y|Ys])];
 merge(Xs, [Y|Ys]) -> [Y | merge(Xs, Ys)].
 
+%% Property for testing merge
 prop_merge() -> ?FORALL(Xs, list(nat()),
                     ?FORALL(Ys, list(nat()),
                         sort(Xs ++ Ys) == sort(merge(Xs, Ys)) )).
