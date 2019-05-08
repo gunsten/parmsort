@@ -65,7 +65,10 @@ shuffle(Xs) ->
 %% Property for testing that shuffle does not lose elements
 prop_shuffle() -> ?FORALL(Xs, list(nat()), sort(Xs) == sort(shuffle(Xs))).
 
-benchmark() -> benchmark([msort, parmsort, parmsort_depth], 100000).
+benchmark() -> [1000, benchmark([msort, parmsort, parmsort_depth], 1000),
+                10000, benchmark([msort, parmsort, parmsort_depth], 10000),
+                100000, benchmark([msort, parmsort, parmsort_depth], 100000),
+                1000000, benchmark([msort, parmsort, parmsort_depth], 1000000)].
 
 benchmark(Funs, Size) ->
     List = shuffle(seq(1, Size)),
@@ -73,7 +76,7 @@ benchmark(Funs, Size) ->
 
 single(Fun, List) ->
     {Time, _} = timer:tc(?MODULE, Fun, [List]),
-    {Fun, Time}.
+    {Fun, Time / 1000}. %millis
     
 %% ---------------------------- TESTING ---------------------------------------
 
