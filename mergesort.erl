@@ -6,9 +6,9 @@
 -define(DEPTH, 4).
 
 %% Sorts the list using the mergesort algorithm
-msort([]) -> [];
+msort([])  -> [];
 msort([X]) -> [X];
-msort(Xs) ->
+msort(Xs)  ->
     {Ys, Zs} = in_half(Xs),
     merge(msort(Ys), msort(Zs)).
 
@@ -16,16 +16,16 @@ msort(Xs) ->
 in_half(Xs) -> split(length(Xs) div 2, Xs).
 
 %% Merge two lists
-merge([], Ys) -> Ys;
-merge(Xs, []) -> Xs;
-merge([X|Xs], [Y|Ys]) when X =< Y -> [X | merge(Xs, [Y|Ys])];
-merge(Xs, [Y|Ys]) -> [Y | merge(Xs, Ys)].
+merge([], Ys) ->                        Ys;
+merge(Xs, []) ->                        Xs;
+merge([X|Xs], [Y|Ys]) when X =< Y ->    [X | merge(Xs, [Y|Ys])];
+merge(Xs, [Y|Ys]) ->                    [Y | merge(Xs, Ys)].
 
 %% Sorts the list using the mergesort algorithm,
 %% forking at every depth of recursion
-parmsort([]) -> [];
+parmsort([])  -> [];
 parmsort([X]) -> [X];
-parmsort(Xs) ->
+parmsort(Xs)  ->
     {Ys, Zs} = in_half(Xs),
     RPid = self(),
     Ref = make_ref(),
@@ -37,9 +37,9 @@ parmsort(Xs) ->
 %% forking until a certain depth of recursion
 parmsort_depth(Xs) -> parmsort(Xs, ?DEPTH).
 
-parmsort([], _) -> [];
+parmsort([], _)  -> [];
 parmsort([X], _) -> [X];
-parmsort(Xs, 0) -> msort(Xs);
+parmsort(Xs, 0)  -> msort(Xs);
 parmsort(Xs, Depth) ->
     {Ys, Zs} = in_half(Xs),
     RPid = self(),
@@ -57,13 +57,16 @@ parmsort(Xs, Depth) ->
 %    {First, [X|Last]} = split(N, Xs),
 %    [X | shuffle(First ++ Last)].
 
-%% My shuffle is far too inefficient - this is borrowed from stack overflow:
+%% My shuffle is far too inefficient and takes way longer than
+%% the actual sorting. The random access of elements is probably the culprit.
+
+%% This elegant approach is borrowed from stack overflow:
 %% https://stackoverflow.com/a/8820501
+%%
+%% Mark the elements of a sequence with random elements, and then sort
+%% the resulting list on the marks.
 shuffle(Xs) ->
     [X || {_,X} <- sort([ {rand:uniform(), X} || X <- Xs])].
-
-%% Property for testing that shuffle does not lose elements
-prop_shuffle() -> ?FORALL(Xs, list(nat()), sort(Xs) == sort(shuffle(Xs))).
 
 benchmark() ->
                 _ = rand:seed(exs1024s),
@@ -82,6 +85,9 @@ single(Fun, List) ->
     {Fun, Time / 1000}. %millis
     
 %% ---------------------------- TESTING ---------------------------------------
+
+%% Property for testing that shuffle does not lose elements
+prop_shuffle() -> ?FORALL(Xs, list(nat()), sort(Xs) == sort(shuffle(Xs))).
 
 %% Property for testing merge
 prop_merge() -> ?FORALL(Xs, list(nat()),
