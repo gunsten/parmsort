@@ -1,7 +1,8 @@
 -module(mergesort).
--include_lib("eqc/include/eqc.hrl").
 -import(lists, [sort/1, split/2, seq/2]).
 -compile(export_all).
+%% eqc is only nescessary for testing
+-include_lib("eqc/include/eqc.hrl").
 
 -define(DEPTH, 4).
 
