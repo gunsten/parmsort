@@ -67,7 +67,8 @@ prop_shuffle() -> ?FORALL(Xs, list(nat()), sort(Xs) == sort(shuffle(Xs))).
 
 benchmark() ->
                 _ = rand:seed(exs1024s),
-                [1000, benchmark([msort, parmsort, parmsort_depth], 1000),
+                [100, benchmark([msort, parmsort, parmsort_depth], 100),
+                 1000, benchmark([msort, parmsort, parmsort_depth], 1000),
                  10000, benchmark([msort, parmsort, parmsort_depth], 10000),
                  100000, benchmark([msort, parmsort, parmsort_depth], 100000),
                  1000000, benchmark([msort, parmsort, parmsort_depth], 1000000)].
